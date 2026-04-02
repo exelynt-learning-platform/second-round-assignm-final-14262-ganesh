@@ -52,7 +52,7 @@ public class OrderService {
     }
 
     
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public String checkout(Long userId) throws StripeException {
 
         User user = userRepo.findById(userId)
@@ -151,7 +151,7 @@ public class OrderService {
     }
 
    
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public String markOrderPaid(Long orderId, String sessionId) throws StripeException {
         Order order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));

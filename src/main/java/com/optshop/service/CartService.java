@@ -40,6 +40,10 @@ public class CartService {
         Product product = productRepo.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
+        if (qty <= 0) {
+            throw new RuntimeException("Quantity must be positive");
+        }
+
         if (product.getStock() < qty) {
             throw new RuntimeException("Insufficient stock");
         }
