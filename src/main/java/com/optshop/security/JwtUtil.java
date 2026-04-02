@@ -8,7 +8,9 @@ import io.jsonwebtoken.Jwts;
 
 @Component
 public class JwtUtil {
-    private final String SECRET = "fjlfjkshfkshuirnngklnkhdlksbhksbgjkdsdarwed123456";
+   
+      @Value("${jwt.secret}")
+    private String SECRET; 
 
     public String generateToken(String email) 
     {
