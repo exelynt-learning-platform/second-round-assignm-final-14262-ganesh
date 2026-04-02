@@ -49,4 +49,9 @@ public class OrderController {
     public List<Order> getOrders(@PathVariable Long userId) {
         return service.getOrdersByUserId(userId);
     }
+
+    @GetMapping
+    public List<Order> getAllOrders() {
+        return service.getAllOrders();
+    }
 }

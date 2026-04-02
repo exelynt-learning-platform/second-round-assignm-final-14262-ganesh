@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 import com.optshop.dto.CartRequest;
 import com.optshop.dto.CartResponse;
@@ -25,7 +26,7 @@ public class CartController {
 
   
     @PostMapping
-    public ResponseEntity<String> add(@RequestBody CartRequest req) {
+    public ResponseEntity<String> add(@Valid @RequestBody CartRequest req) {
         service.addToCart(req.getUserId(), req.getProductId(), req.getQuantity());
         return ResponseEntity.status(HttpStatus.CREATED).body("Added to The Cart");
     }

@@ -36,7 +36,9 @@ public class JwtFilter extends OncePerRequestFilter {
         if (auth != null && auth.startsWith("Bearer ")) {
 
             String token = auth.substring(7);
-            String email = jwtUtil.extractEmail(token);
+            
+            if (jwtUtil.validateToken(token)) {
+                String email = jwtUtil.extractEmail(token);
 
             User user = userRepo.findByEmail(email).orElse(null);
 
@@ -53,6 +55,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 );
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
             }
         }
 

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.optshop.dto.CartItemResponse;
 import com.optshop.dto.CartResponse;
@@ -28,6 +29,7 @@ public class CartService {
     private final ProductRepository productRepo;
 
     
+    @Transactional
     public void addToCart(Long userId, Long productId, int qty) {
 
         User user = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
@@ -38,9 +40,16 @@ public class CartService {
         Product product = productRepo.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
+        if (product.getStock() < qty) {
+            throw new RuntimeException("Insufficient stock");
+        }
+
         CartItem item = itemRepo.findByCartAndProduct(cart, product).orElse(null);
 
         if (item != null) {
+            if (product.getStock() < item.getQuantity() + qty) {
+                throw new RuntimeException("Insufficient stock");
+            }
             item.setQuantity(item.getQuantity() + qty);
         } else {
             item = new CartItem(null, cart, product, qty);
@@ -50,6 +59,7 @@ public class CartService {
     }
 
    
+    @Transactional
     public void removeItem(Long cartItemId) {
         itemRepo.deleteById(cartItemId);
     }

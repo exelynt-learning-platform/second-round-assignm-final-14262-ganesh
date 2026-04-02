@@ -10,6 +10,7 @@ import com.optshop.entity.Cart;
 import com.optshop.entity.CartItem;
 import com.optshop.entity.Order;
 import com.optshop.entity.OrderItem;
+import com.optshop.entity.Product;
 import com.optshop.entity.User;
 import com.optshop.repository.CartItemRepository;
 import com.optshop.repository.CartRepository;
@@ -38,6 +39,10 @@ public class OrderService {
         return orderRepo.findByUser(user);
     }
 
+    public List<Order> getAllOrders() {
+        return orderRepo.findAll();
+    }
+
     
     @Transactional
     public String checkout(Long userId) throws StripeException {
@@ -57,6 +62,13 @@ public class OrderService {
         double total = cartItems.stream()
                 .mapToDouble(i -> i.getProduct().getPrice() * i.getQuantity())
                 .sum();
+
+        for (CartItem ci : cartItems) {
+            Product p = ci.getProduct();
+            if (p.getStock() < ci.getQuantity()) {
+                throw new RuntimeException("Insufficient stock for product: " + p.getName());
+            }
+        }
 
         List<OrderItem> orderItems = new ArrayList<>();
 
@@ -150,6 +162,14 @@ public class OrderService {
             Cart cart = cartRepo.findByUser(user)
                     .orElseThrow(() -> new RuntimeException("Cart not found"));
             List<CartItem> cartItems = itemRepo.findByCart(cart);
+            
+            for (CartItem ci : cartItems) {
+                Product p = ci.getProduct();
+                if (p.getStock() >= ci.getQuantity()) {
+                    p.setStock(p.getStock() - ci.getQuantity());
+                }
+            }
+            
             itemRepo.deleteAll(cartItems);
             
             return "Payment Successful & Order Updated...!";

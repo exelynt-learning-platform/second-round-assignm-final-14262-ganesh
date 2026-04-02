@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.optshop.config.AuthService;
 import com.optshop.dto.AuthRequest;
 import com.optshop.dto.AuthResponse;
@@ -20,13 +22,13 @@ public class AuthController
     private final AuthService service;
 
     @PostMapping("/register")
-    public String register(@RequestBody AuthRequest req)
+    public String register(@Valid @RequestBody AuthRequest req)
     {
         return service.register(req);
     }
 
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody AuthRequest req) 
+    public AuthResponse login(@Valid @RequestBody AuthRequest req) 
     {
         return service.login(req);
     }

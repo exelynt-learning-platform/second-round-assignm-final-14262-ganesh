@@ -1,24 +1,38 @@
 package com.optshop.security;
 
 import org.springframework.stereotype.Component;
-
-
-import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
+import java.security.Key;
+import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.Jwts;
 
 @Component
 public class JwtUtil {
-    private final String SECRET = "fjlfjkshfkshuirnngklnkhdlksbhksbgjkdsdarwed123456";
+    @Value("${jwt.secret:fjlfjkshfkshuirnngklnkhdlksbhksbgjkdsdarwed123456}")
+    private String SECRET;
+
+    private Key getSigningKey() {
+        return Keys.hmacShaKeyFor(SECRET.getBytes());
+    }
 
     public String generateToken(String email) 
     {
         return Jwts.builder().setSubject(email)
-                .signWith(SignatureAlgorithm.HS256, SECRET).compact();
+                .signWith(getSigningKey()).compact();
     }
 
     public String extractEmail(String token) 
     {
-        return Jwts.parser().setSigningKey(SECRET)
-                .parseClaimsJws(token).getBody().getSubject();
+        return Jwts.parserBuilder().setSigningKey(getSigningKey())
+                .build().parseClaimsJws(token).getBody().getSubject();
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
