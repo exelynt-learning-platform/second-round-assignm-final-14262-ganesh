@@ -8,7 +8,7 @@ import io.jsonwebtoken.Jwts;
 
 @Component
 public class JwtUtil {
-    @Value("${jwt.secret:fjlfjkshfkshuirnngklnkhdlksbhksbgjkdsdarwed123456}")
+    @Value("${jwt.secret}")
     private String SECRET;
 
     private Key getSigningKey() {

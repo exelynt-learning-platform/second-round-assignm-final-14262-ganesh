@@ -18,7 +18,6 @@ public class OrderControllerTest {
     @Test void testCheckout() throws Exception {
         when(service.checkout(1L)).thenReturn("url");
         assertEquals("url", controller.checkout(1L));
-        assertEquals("url", controller.createOrder(1L));
     }
 
     @Test void testSuccess() throws Exception {

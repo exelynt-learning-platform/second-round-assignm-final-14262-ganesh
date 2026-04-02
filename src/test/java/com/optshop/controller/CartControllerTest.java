@@ -33,6 +33,8 @@ public class CartControllerTest {
     }
 
     @Test void testRemove() {
-        assertEquals("Removed", controller.remove(1L));
+        ResponseEntity<Void> response = controller.remove(1L);
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        assertNull(response.getBody());
     }
 }

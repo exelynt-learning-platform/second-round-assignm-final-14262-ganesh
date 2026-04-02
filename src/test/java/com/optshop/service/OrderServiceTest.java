@@ -20,6 +20,7 @@ import com.optshop.entity.CartItem;
 import com.optshop.entity.Order;
 import com.optshop.entity.Product;
 import com.optshop.entity.User;
+import com.stripe.param.checkout.SessionCreateParams;
 import com.optshop.repository.CartItemRepository;
 import com.optshop.repository.CartRepository;
 import com.optshop.repository.OrderRepository;
@@ -103,9 +104,57 @@ public class OrderServiceTest {
             String result = orderService.markOrderPaid(1L, "session_id");
 
             assertEquals("Payment Successful & Order Updated...!", result);
-            assertEquals("PAID", order.getStatus());
+            assertEquals(com.optshop.entity.OrderStatus.PAID, order.getStatus());
             assertEquals(8, product.getStock()); // Deducted 2
             verify(itemRepo, times(1)).deleteAll(anyList());
         }
     }
+
+    @Test
+    void testMarkOrderPaid_NotPaid() throws StripeException {
+        Order order = new Order();
+        order.setUser(user);
+        when(orderRepo.findById(1L)).thenReturn(Optional.of(order));
+
+        Session mockSession = mock(Session.class);
+        when(mockSession.getPaymentStatus()).thenReturn("unpaid");
+
+        try (MockedStatic<Session> sessionStatic = mockStatic(Session.class)) {
+            sessionStatic.when(() -> Session.retrieve("session_id")).thenReturn(mockSession);
+
+            String result = orderService.markOrderPaid(1L, "session_id");
+
+            assertEquals("Payment not completed", result);
+            verify(orderRepo, never()).save(order);
+        }
+    }
+
+    @Test
+    void testCheckout_Success() throws StripeException {
+        when(userRepo.findById(1L)).thenReturn(Optional.of(user));
+        when(cartRepo.findByUser(user)).thenReturn(Optional.of(cart));
+        CartItem item = new CartItem(1L, cart, product, 2);
+        when(itemRepo.findByCart(cart)).thenReturn(List.of(item));
+
+        when(orderRepo.save(any(Order.class))).thenAnswer(invocation -> {
+            Order o = invocation.getArgument(0);
+            if (o.getId() == null) {
+                o.setId(1L);
+            }
+            return o;
+        });
+
+        Session session = mock(Session.class);
+        when(session.getUrl()).thenReturn("https://checkout.url");
+
+        try (MockedStatic<Session> sessionStatic = mockStatic(Session.class)) {
+            sessionStatic.when(() -> Session.create(any(SessionCreateParams.class))).thenReturn(session);
+
+            String result = orderService.checkout(1L);
+
+            assertEquals("https://checkout.url", result);
+            verify(orderRepo, atLeastOnce()).save(any(Order.class));
+        }
+    }
 }
+

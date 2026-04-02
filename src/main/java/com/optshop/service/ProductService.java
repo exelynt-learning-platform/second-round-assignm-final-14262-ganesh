@@ -37,7 +37,10 @@ public class ProductService
     {
         Product existing = repo.findById(id).orElseThrow();
         existing.setName(p.getName());
+        existing.setDescription(p.getDescription());
         existing.setPrice(p.getPrice());
+        existing.setStock(p.getStock());
+        existing.setImageUrl(p.getImageUrl());
         return repo.save(existing);
     }
 

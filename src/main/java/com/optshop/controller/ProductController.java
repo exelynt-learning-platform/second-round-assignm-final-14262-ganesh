@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import org.springframework.validation.annotation.Validated;
 
 import com.optshop.entity.Product;
 import com.optshop.service.ProductService;
@@ -23,6 +24,7 @@ import lombok.AllArgsConstructor;
 @RestController
 @RequestMapping("/products")
 @AllArgsConstructor
+@Validated
 public class ProductController {
 
     private final ProductService service;

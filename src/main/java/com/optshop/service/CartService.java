@@ -40,6 +40,10 @@ public class CartService {
         Product product = productRepo.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
+        if (qty <= 0) {
+            throw new RuntimeException("Quantity must be positive");
+        }
+
         if (product.getStock() < qty) {
             throw new RuntimeException("Insufficient stock");
         }
@@ -66,8 +70,8 @@ public class CartService {
 
     
     public CartResponse viewCart(Long userId) {
-        User user = userRepo.findById(userId).orElseThrow();
-        Cart cart = cartRepo.findByUser(user).orElseThrow();
+        User user = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        Cart cart = cartRepo.findByUser(user).orElseThrow(() -> new RuntimeException("Cart not found"));
 
         List<CartItem> cartItems = itemRepo.findByCart(cart);
 

@@ -10,6 +10,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -33,7 +35,9 @@ public class Order {
 
     private double total;
 
-    private String status; // PENDING, PAID
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status; // PENDING, PAID
 
-    private String paymentStatus; // PENDING, SUCCESS
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus; // PENDING, SUCCESS
 }

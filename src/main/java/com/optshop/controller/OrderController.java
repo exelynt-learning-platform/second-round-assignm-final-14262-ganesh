@@ -29,11 +29,6 @@ public class OrderController {
         String checkoutUrl = service.checkout(userId);
         return checkoutUrl; 
     }
-    
-    @PostMapping("/{userId}")
-    public String createOrder(@PathVariable Long userId) throws StripeException {
-        return service.checkout(userId);
-    }
 
     @GetMapping("/success/{orderId}")
     public String success(@PathVariable Long orderId, @RequestParam String session_id) throws StripeException {

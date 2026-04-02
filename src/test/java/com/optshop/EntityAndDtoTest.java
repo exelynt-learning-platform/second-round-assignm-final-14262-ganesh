@@ -96,8 +96,8 @@ public class EntityAndDtoTest {
         o.setId(1L);
         o.setUser(new User());
         o.setTotal(10.0);
-        o.setStatus("s");
-        o.setPaymentStatus("p");
+        o.setStatus(OrderStatus.PENDING);
+        o.setPaymentStatus(PaymentStatus.PENDING);
         o.setItems(List.of());
         assertEquals(1L, o.getId());
     }

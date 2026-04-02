@@ -3,6 +3,7 @@ package com.optshop.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,6 +11,8 @@ import com.optshop.entity.Cart;
 import com.optshop.entity.CartItem;
 import com.optshop.entity.Order;
 import com.optshop.entity.OrderItem;
+import com.optshop.entity.OrderStatus;
+import com.optshop.entity.PaymentStatus;
 import com.optshop.entity.Product;
 import com.optshop.entity.User;
 import com.optshop.repository.CartItemRepository;
@@ -26,10 +29,15 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class OrderService {
 
+    private static final int CENTS_IN_DOLLAR = 100;
+
     private final CartRepository cartRepo;
     private final CartItemRepository itemRepo;
     private final OrderRepository orderRepo;
     private final UserRepository userRepo;
+
+    @Value("${app.url}")
+    private String baseUrl;
 
    
     public List<Order> getOrdersByUserId(Long userId) {
@@ -44,7 +52,7 @@ public class OrderService {
     }
 
     
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public String checkout(Long userId) throws StripeException {
 
         User user = userRepo.findById(userId)
@@ -75,8 +83,8 @@ public class OrderService {
         Order order = new Order();
         order.setUser(user);
         order.setTotal(total);
-        order.setStatus("PENDING");
-        order.setPaymentStatus("PENDING");
+        order.setStatus(OrderStatus.PENDING);
+        order.setPaymentStatus(PaymentStatus.PENDING);
 
         orderRepo.save(order);
 
@@ -103,7 +111,7 @@ public class OrderService {
         
         for (CartItem item : cartItems) {
             // Convert price to cents/pence (Stripe uses smallest currency unit)
-            long amountInCents = (long) (item.getProduct().getPrice() * 100);
+            long amountInCents = (long) (item.getProduct().getPrice() * CENTS_IN_DOLLAR);
             
             SessionCreateParams.LineItem.PriceData.ProductData productData = 
                 SessionCreateParams.LineItem.PriceData.ProductData.builder()
@@ -130,8 +138,8 @@ public class OrderService {
         SessionCreateParams params = SessionCreateParams.builder()
             .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
             .setMode(SessionCreateParams.Mode.PAYMENT)
-            .setSuccessUrl("http://localhost:8080/orders/success/" + order.getId() + "?session_id={CHECKOUT_SESSION_ID}")
-            .setCancelUrl("http://localhost:8080/orders/cancel")
+            .setSuccessUrl(baseUrl + "/orders/success/" + order.getId() + "?session_id={CHECKOUT_SESSION_ID}")
+            .setCancelUrl(baseUrl + "/orders/cancel")
             .addAllLineItem(lineItems)
             .putMetadata("order_id", order.getId().toString())
             .putMetadata("user_id", user.getId().toString())
@@ -143,7 +151,7 @@ public class OrderService {
     }
 
    
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public String markOrderPaid(Long orderId, String sessionId) throws StripeException {
         Order order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
@@ -153,8 +161,8 @@ public class OrderService {
         
         // Check if payment was successful
         if ("paid".equals(session.getPaymentStatus())) {
-            order.setStatus("PAID");
-            order.setPaymentStatus("SUCCESS");
+            order.setStatus(OrderStatus.PAID);
+            order.setPaymentStatus(PaymentStatus.SUCCESS);
             orderRepo.save(order);
             
             // Clear the cart after successful payment

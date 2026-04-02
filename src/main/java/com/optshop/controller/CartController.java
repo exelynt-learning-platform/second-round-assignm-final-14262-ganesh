@@ -33,14 +33,14 @@ public class CartController {
 
    
     @GetMapping("/{userId}")
-    public CartResponse view(@PathVariable Long userId) {
-        return service.viewCart(userId); // returns CartResponse now
+    public ResponseEntity<CartResponse> view(@PathVariable Long userId) {
+        return ResponseEntity.ok(service.viewCart(userId));
     }
 
    
     @DeleteMapping("/{cartItemId}")
-    public String remove(@PathVariable Long cartItemId) {
+    public ResponseEntity<Void> remove(@PathVariable Long cartItemId) {
         service.removeItem(cartItemId);
-        return "Removed";
+        return ResponseEntity.noContent().build();
     }
 }

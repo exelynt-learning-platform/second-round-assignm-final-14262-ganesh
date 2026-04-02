@@ -30,7 +30,8 @@ public class UserControllerTest {
 
     @Test
     void testGetUserById() {
-        when(repo.findById(1L)).thenReturn(Optional.of(new User()));
+        User user = new User();
+        when(repo.findById(1L)).thenReturn(Optional.of(user));
         assertEquals(HttpStatus.OK, controller.getUserById(1L).getStatusCode());
     }
 
@@ -39,3 +40,5 @@ public class UserControllerTest {
         assertEquals(HttpStatus.NO_CONTENT, controller.deleteUser(1L).getStatusCode());
     }
 }
+
+
