@@ -11,6 +11,7 @@ import com.optshop.entity.User;
 import com.optshop.repository.UserRepository;
 import com.optshop.security.JwtUtil;
 
+import org.springframework.beans.factory.annotation.Value;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -21,10 +22,13 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder encoder;
 
+    @Value("${app.security.password.regex}")
+    private String passwordRegex;
+
     @Transactional
     public String register(AuthRequest req) {
         // Strict password validation
-        if (req.getPassword() == null || !req.getPassword().matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$")) {
+        if (req.getPassword() == null || !req.getPassword().matches(passwordRegex)) {
             throw new RuntimeException("Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number, and a special character.");
         }
 

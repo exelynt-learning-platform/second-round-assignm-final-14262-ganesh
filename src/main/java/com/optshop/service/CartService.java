@@ -66,8 +66,8 @@ public class CartService {
 
     
     public CartResponse viewCart(Long userId) {
-        User user = userRepo.findById(userId).orElseThrow();
-        Cart cart = cartRepo.findByUser(user).orElseThrow();
+        User user = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        Cart cart = cartRepo.findByUser(user).orElseThrow(() -> new RuntimeException("Cart not found"));
 
         List<CartItem> cartItems = itemRepo.findByCart(cart);
 
