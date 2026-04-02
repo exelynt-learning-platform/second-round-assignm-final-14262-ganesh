@@ -3,6 +3,7 @@ package com.optshop.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.optshop.entity.Product;
 import com.optshop.repository.ProductRepository;
@@ -16,9 +17,14 @@ public class ProductService
 
     private final ProductRepository repo;
 
+    @Transactional
     public Product add(Product p) 
     {
     	return repo.save(p); 
+    }
+
+    public Product getById(Long id) {
+        return repo.findById(id).orElseThrow(() -> new RuntimeException("Product not found"));
     }
 
     public List<Product> getAll() 
@@ -26,6 +32,7 @@ public class ProductService
     	return repo.findAll(); 
     }
 
+    @Transactional
     public Product update(Long id, Product p) 
     {
         Product existing = repo.findById(id).orElseThrow();
@@ -34,6 +41,7 @@ public class ProductService
         return repo.save(existing);
     }
 
+    @Transactional
     public void delete(Long id) 
     { 
     	repo.deleteById(id);

@@ -2,6 +2,7 @@ package com.optshop.config;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.optshop.dto.AuthRequest;
 import com.optshop.dto.AuthResponse;
@@ -20,9 +21,13 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder encoder;
 
+    @Transactional
     public String register(AuthRequest req) {
+        // Strict password validation
+        if (req.getPassword() == null || !req.getPassword().matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$")) {
+            throw new RuntimeException("Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number, and a special character.");
+        }
 
-       
         if (repo.findByEmail(req.getEmail()).isPresent()) {
             throw new RuntimeException("User already registered with this email");
         }
@@ -40,7 +45,7 @@ public class AuthService {
     }
 
     public AuthResponse login(AuthRequest req) {
-        User user = repo.findByEmail(req.getEmail()).orElseThrow();
+        User user = repo.findByEmail(req.getEmail()).orElseThrow(() -> new RuntimeException("User not found"));
         if (encoder.matches(req.getPassword(), user.getPassword())) {
             return new AuthResponse(jwtUtil.generateToken(user.getEmail()));
         }

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Final Project Assignment - Exelynt Learning Platform
 
 ## Overview
@@ -124,3 +125,6 @@ Student: ganesh
 ---
 
 **Last Updated**: 2026-04-01 16:25:38
+=======
+
+>>>>>>> main

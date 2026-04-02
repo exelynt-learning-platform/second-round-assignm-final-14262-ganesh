@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.optshop.entity.Product;
 import com.optshop.service.ProductService;
 
@@ -25,7 +27,7 @@ public class ProductController {
 
     private final ProductService service;
     @PostMapping
-    public ResponseEntity<Product> add(@RequestBody Product p) 
+    public ResponseEntity<Product> add(@Valid @RequestBody Product p) 
     {
         return new ResponseEntity<>(service.add(p), HttpStatus.CREATED);
     }
@@ -34,9 +36,14 @@ public class ProductController {
     public ResponseEntity<List<Product>> getAll() {
         return ResponseEntity.ok(service.getAll());
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Product> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.getById(id));
+    }
     
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product p) {
+    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @Valid @RequestBody Product p) {
         Product updated = service.update(id, p);
         return ResponseEntity.ok(updated);
     }
