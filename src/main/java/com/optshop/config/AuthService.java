@@ -3,6 +3,8 @@ package com.optshop.config;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
+import jakarta.annotation.PostConstruct;
 
 import com.optshop.dto.AuthRequest;
 import com.optshop.dto.AuthResponse;
@@ -22,8 +24,15 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder encoder;
 
-    @Value("${app.security.password.regex}")
+    @Value("${app.security.password.regex:}")
     private String passwordRegex;
+
+    @PostConstruct
+    public void init() {
+        if (passwordRegex == null || passwordRegex.isEmpty()) {
+            passwordRegex = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$";
+        }
+    }
 
     @Transactional
     public String register(AuthRequest req) {

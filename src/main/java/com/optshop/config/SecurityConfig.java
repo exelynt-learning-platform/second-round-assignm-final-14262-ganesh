@@ -8,6 +8,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.optshop.security.JwtFilter;
 
@@ -19,6 +20,9 @@ public class SecurityConfig
 {
 
     private final JwtFilter jwtFilter;
+
+    @Value("${cors.allowed.origins:http://localhost:3000,http://localhost:8080}")
+    private String[] allowedOrigins;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -49,7 +53,9 @@ public class SecurityConfig
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
-        configuration.addAllowedOriginPattern("*");
+        for (String origin : allowedOrigins) {
+            configuration.addAllowedOrigin(origin);
+        }
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         configuration.setAllowCredentials(true);

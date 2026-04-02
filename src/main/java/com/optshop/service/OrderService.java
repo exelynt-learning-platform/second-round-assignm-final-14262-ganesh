@@ -29,6 +29,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class OrderService {
 
+    private static final int CENTS_IN_DOLLAR = 100;
+
     private final CartRepository cartRepo;
     private final CartItemRepository itemRepo;
     private final OrderRepository orderRepo;
@@ -109,7 +111,7 @@ public class OrderService {
         
         for (CartItem item : cartItems) {
             // Convert price to cents/pence (Stripe uses smallest currency unit)
-            long amountInCents = (long) (item.getProduct().getPrice() * 100);
+            long amountInCents = (long) (item.getProduct().getPrice() * CENTS_IN_DOLLAR);
             
             SessionCreateParams.LineItem.PriceData.ProductData productData = 
                 SessionCreateParams.LineItem.PriceData.ProductData.builder()

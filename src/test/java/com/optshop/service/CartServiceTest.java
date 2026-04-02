@@ -106,8 +106,12 @@ public class CartServiceTest {
         when(cartRepo.findByUser(user)).thenReturn(Optional.of(cart));
         when(itemRepo.findByCart(cart)).thenReturn(List.of(item));
 
-        CartResponse res = cartService.viewCart(1L);
-        assertNotNull(res);
-        assertEquals(200.0, res.getTotalPrice());
+        CartResponse response = cartService.viewCart(1L);
+
+        assertEquals(1L, response.getCartId());
+        assertEquals(1L, response.getUserId());
+        assertEquals(200.0, response.getTotalPrice());
+        assertEquals(1, response.getItems().size());
     }
+
 }
