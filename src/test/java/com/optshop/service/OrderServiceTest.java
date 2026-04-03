@@ -24,6 +24,7 @@ import com.stripe.param.checkout.SessionCreateParams;
 import com.optshop.repository.CartItemRepository;
 import com.optshop.repository.CartRepository;
 import com.optshop.repository.OrderRepository;
+import com.optshop.repository.ProductRepository;
 import com.optshop.repository.UserRepository;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
@@ -39,6 +40,8 @@ public class OrderServiceTest {
     private OrderRepository orderRepo;
     @Mock
     private UserRepository userRepo;
+    @Mock
+    private ProductRepository productRepo;
 
     @InjectMocks
     private OrderService orderService;
@@ -94,7 +97,7 @@ public class OrderServiceTest {
         when(cartRepo.findByUser(user)).thenReturn(Optional.of(cart));
         when(itemRepo.findByCart(cart)).thenReturn(List.of(item));
 
-        // Mock Session
+
         Session mockSession = mock(Session.class);
         when(mockSession.getPaymentStatus()).thenReturn("paid");
 

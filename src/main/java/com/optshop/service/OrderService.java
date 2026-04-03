@@ -19,7 +19,10 @@ import com.optshop.entity.User;
 import com.optshop.repository.CartItemRepository;
 import com.optshop.repository.CartRepository;
 import com.optshop.repository.OrderRepository;
+import com.optshop.repository.ProductRepository;
 import com.optshop.repository.UserRepository;
+import com.optshop.exception.InsufficientStockException;
+import jakarta.persistence.OptimisticLockException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
@@ -29,18 +32,20 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class OrderService {
-
-    private static final int CENTS_IN_DOLLAR = 100;
-
     private final CartRepository cartRepo;
     private final CartItemRepository itemRepo;
     private final OrderRepository orderRepo;
     private final UserRepository userRepo;
+    private final ProductRepository productRepo;
+
+    @Value("${app.currency.multiplier:100}")
+    private int currencyMultiplier;
+
+    @Value("${app.currency:usd}")
+    private String currency;
 
     @Value("${app.url}")
     private String baseUrl;
-
-   
     public List<Order> getOrdersByUserId(Long userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -64,27 +69,50 @@ public class OrderService {
     @Transactional(rollbackFor = Exception.class, isolation = Isolation.SERIALIZABLE)
     public String checkout(Long userId) throws StripeException {
 
-        User user = userRepo.findById(userId)
+        User user = getUser(userId);
+        Cart cart = getCart(user);
+        List<CartItem> cartItems = getCartItems(cart);
+
+        validateCart(cartItems);
+
+        double total = calculateTotal(cartItems);
+
+        Order order = createOrder(user, total, cartItems);
+
+        return createStripeCheckoutSession(order, user, cartItems);
+    }
+    
+    private User getUser(Long userId) {
+        return userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
-        Cart cart = cartRepo.findByUser(user)
+    }
+    
+    private Cart getCart(User user) {
+        return cartRepo.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
-
-        List<CartItem> cartItems = itemRepo.findByCart(cart);
-
-        if (cartItems.isEmpty()) {
+    }
+    
+    private List<CartItem> getCartItems(Cart cart) {
+        List<CartItem> items = itemRepo.findByCart(cart);
+        if (items.isEmpty()) {
             throw new RuntimeException("Cart is empty");
         }
-
-        double total = cartItems.stream()
-                .mapToDouble(i -> i.getProduct().getPrice() * i.getQuantity())
-                .sum();
-
+        return items;
+    }
+    
+    private void validateCart(List<CartItem> cartItems) {
         for (CartItem ci : cartItems) {
             confirmStock(ci.getProduct(), ci.getQuantity());
         }
-
-        List<OrderItem> orderItems = new ArrayList<>();
+    }
+    
+    private double calculateTotal(List<CartItem> cartItems) {
+        return cartItems.stream()
+                .mapToDouble(i -> i.getProduct().getPrice() * i.getQuantity())
+                .sum();
+    }
+    
+    private Order createOrder(User user, double total, List<CartItem> cartItems) {
 
         Order order = new Order();
         order.setUser(user);
@@ -93,6 +121,8 @@ public class OrderService {
         order.setPaymentStatus(PaymentStatus.PENDING);
 
         orderRepo.save(order);
+
+        List<OrderItem> orderItems = new ArrayList<>();
 
         for (CartItem c : cartItems) {
             OrderItem oi = new OrderItem();
@@ -103,21 +133,16 @@ public class OrderService {
         }
 
         order.setItems(orderItems);
-        orderRepo.save(order);
-
-        // Create Stripe Checkout Session
-        String checkoutUrl = createStripeCheckoutSession(order, user, cartItems);
-        
-        return checkoutUrl;
+        return orderRepo.save(order);
     }
     
     private String createStripeCheckoutSession(Order order, User user, List<CartItem> cartItems) throws StripeException {
-        // Build line items for Stripe
+
         List<SessionCreateParams.LineItem> lineItems = new ArrayList<>();
         
         for (CartItem item : cartItems) {
-            // Convert price to cents/pence (Stripe uses smallest currency unit)
-            long amountInCents = (long) (item.getProduct().getPrice() * CENTS_IN_DOLLAR);
+
+            long amountInCents = Math.round(item.getProduct().getPrice() * currencyMultiplier);
             
             SessionCreateParams.LineItem.PriceData.ProductData productData = 
                 SessionCreateParams.LineItem.PriceData.ProductData.builder()
@@ -126,7 +151,7 @@ public class OrderService {
             
             SessionCreateParams.LineItem.PriceData priceData = 
                 SessionCreateParams.LineItem.PriceData.builder()
-                    .setCurrency("usd")
+                    .setCurrency(currency)
                     .setUnitAmount(amountInCents)
                     .setProductData(productData)
                     .build();
@@ -140,7 +165,7 @@ public class OrderService {
             lineItems.add(lineItem);
         }
         
-        // Create checkout session with metadata to track order
+
         SessionCreateParams params = SessionCreateParams.builder()
             .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
             .setMode(SessionCreateParams.Mode.PAYMENT)
@@ -162,16 +187,16 @@ public class OrderService {
         Order order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         
-        // Verify the payment session
+
         Session session = Session.retrieve(sessionId);
         
-        // Check if payment was successful
+
         if ("paid".equals(session.getPaymentStatus())) {
             order.setStatus(OrderStatus.PAID);
             order.setPaymentStatus(PaymentStatus.SUCCESS);
             orderRepo.save(order);
             
-            // Clear the cart after successful payment
+
             User user = order.getUser();
             Cart cart = cartRepo.findByUser(user)
                     .orElseThrow(() -> new RuntimeException("Cart not found"));
@@ -181,8 +206,13 @@ public class OrderService {
                 Product p = ci.getProduct();
                 if (p.getStock() >= ci.getQuantity()) {
                     p.setStock(p.getStock() - ci.getQuantity());
+                    try {
+                        productRepo.save(p);
+                    } catch (OptimisticLockException e) {
+                        throw new RuntimeException("Stock update conflict. Please retry.");
+                    }
                 } else {
-                    throw new RuntimeException("Insufficient stock when finalizing payment for product: " + p.getName());
+                    throw new InsufficientStockException("Insufficient stock when finalizing payment for product: " + p.getName());
                 }
             }
             

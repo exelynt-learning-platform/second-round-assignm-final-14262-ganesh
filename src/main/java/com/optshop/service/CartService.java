@@ -12,6 +12,8 @@ import com.optshop.entity.Cart;
 import com.optshop.entity.CartItem;
 import com.optshop.entity.Product;
 import com.optshop.entity.User;
+import com.optshop.exception.InsufficientStockException;
+import com.optshop.exception.ProductNotFoundException;
 import com.optshop.repository.CartItemRepository;
 import com.optshop.repository.CartRepository;
 import com.optshop.repository.ProductRepository;
@@ -38,15 +40,9 @@ public class CartService {
                 .orElseGet(() -> cartRepo.save(new Cart(null, user)));
 
         Product product = productRepo.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
 
-        if (qty <= 0) {
-            throw new RuntimeException("Quantity must be positive");
-        }
-
-        if (product.getStock() < qty) {
-            throw new RuntimeException("Insufficient stock");
-        }
+        validateCartQuantity(product, qty);
 
         CartItem item = itemRepo.findByCartAndProduct(cart, product).orElse(null);
 
@@ -64,10 +60,10 @@ public class CartService {
 
     private void validateCartQuantity(Product product, int quantity) {
         if (quantity <= 0) {
-            throw new RuntimeException("Quantity must be positive after update");
+            throw new RuntimeException("Quantity must be positive");
         }
         if (product.getStock() < quantity) {
-            throw new RuntimeException("Insufficient stock");
+            throw new InsufficientStockException("Insufficient stock");
         }
     }
 

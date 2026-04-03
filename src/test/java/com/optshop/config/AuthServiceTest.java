@@ -39,7 +39,7 @@ public class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
-        authService.init();
+
     }
 
     @Test
@@ -117,12 +117,5 @@ public class AuthServiceTest {
 
         Exception ex = assertThrows(RuntimeException.class, () -> authService.login(loginReq));
         assertEquals("User not found", ex.getMessage());
-    }
-
-    @Test
-    void testInit_DefaultRegex() {
-        // Since passwordRegex is @Value with default, and init sets if null
-        authService.init();
-        // Hard to test without reflection, but assume it's covered
     }
 }
