@@ -6,6 +6,8 @@ import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 
+import org.mockito.ArgumentCaptor;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,6 +47,7 @@ public class AuthServiceTest {
         AuthRequest req = new AuthRequest();
         req.setEmail("test@example.com");
         req.setPassword("Password123!");
+        req.setRole(Role.ADMIN);
 
         when(repo.findByEmail("test@example.com")).thenReturn(Optional.empty());
         when(encoder.encode("Password123!")).thenReturn("encoded-password");
@@ -53,7 +56,10 @@ public class AuthServiceTest {
         String response = authService.register(req);
 
         assertEquals("Registered Successfully", response);
-        verify(repo, times(1)).save(any(User.class));
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(repo, times(1)).save(captor.capture());
+        assertEquals(Role.ADMIN, captor.getValue().getRole());
     }
 
     @Test

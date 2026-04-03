@@ -51,8 +51,8 @@ public class AuthService {
         user.setEmail(req.getEmail());
         user.setPassword(encoder.encode(req.getPassword()));
 
-      
-        user.setRole(Role.USER);
+        Role role = req.getRole() == null ? Role.USER : req.getRole();
+        user.setRole(role);
 
         repo.save(user);
 
