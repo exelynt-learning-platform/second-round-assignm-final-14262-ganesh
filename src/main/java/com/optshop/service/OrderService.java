@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.optshop.entity.Cart;
@@ -51,8 +52,16 @@ public class OrderService {
         return orderRepo.findAll();
     }
 
-    
-    @Transactional(rollbackFor = Exception.class)
+    private void confirmStock(Product product, int quantity) {
+        if (quantity <= 0) {
+            throw new RuntimeException("Quantity must be positive");
+        }
+        if (product.getStock() < quantity) {
+            throw new RuntimeException("Insufficient stock for product: " + product.getName());
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class, isolation = Isolation.SERIALIZABLE)
     public String checkout(Long userId) throws StripeException {
 
         User user = userRepo.findById(userId)
@@ -72,10 +81,7 @@ public class OrderService {
                 .sum();
 
         for (CartItem ci : cartItems) {
-            Product p = ci.getProduct();
-            if (p.getStock() < ci.getQuantity()) {
-                throw new RuntimeException("Insufficient stock for product: " + p.getName());
-            }
+            confirmStock(ci.getProduct(), ci.getQuantity());
         }
 
         List<OrderItem> orderItems = new ArrayList<>();
@@ -175,6 +181,8 @@ public class OrderService {
                 Product p = ci.getProduct();
                 if (p.getStock() >= ci.getQuantity()) {
                     p.setStock(p.getStock() - ci.getQuantity());
+                } else {
+                    throw new RuntimeException("Insufficient stock when finalizing payment for product: " + p.getName());
                 }
             }
             

@@ -13,7 +13,6 @@ import com.optshop.entity.User;
 import com.optshop.repository.UserRepository;
 import com.optshop.security.JwtUtil;
 
-import org.springframework.beans.factory.annotation.Value;
 import lombok.RequiredArgsConstructor;
 
 @Service

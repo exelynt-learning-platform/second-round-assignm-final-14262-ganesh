@@ -51,15 +51,24 @@ public class CartService {
         CartItem item = itemRepo.findByCartAndProduct(cart, product).orElse(null);
 
         if (item != null) {
-            if (product.getStock() < item.getQuantity() + qty) {
-                throw new RuntimeException("Insufficient stock");
-            }
-            item.setQuantity(item.getQuantity() + qty);
+            int newQuantity = item.getQuantity() + qty;
+            validateCartQuantity(product, newQuantity);
+            item.setQuantity(newQuantity);
         } else {
+            validateCartQuantity(product, qty);
             item = new CartItem(null, cart, product, qty);
         }
 
         itemRepo.save(item);
+    }
+
+    private void validateCartQuantity(Product product, int quantity) {
+        if (quantity <= 0) {
+            throw new RuntimeException("Quantity must be positive after update");
+        }
+        if (product.getStock() < quantity) {
+            throw new RuntimeException("Insufficient stock");
+        }
     }
 
    
