@@ -38,7 +38,9 @@ public class OrderService {
     private final UserRepository userRepo;
     private final ProductRepository productRepo;
 
-    @Value("${app.currency.multiplier:100}")
+    private static final int DEFAULT_MULTIPLIER = 100;
+
+    @Value("${app.currency.multiplier:" + DEFAULT_MULTIPLIER + "}")
     private int currencyMultiplier;
 
     @Value("${app.currency:usd}")
@@ -46,6 +48,7 @@ public class OrderService {
 
     @Value("${app.url}")
     private String baseUrl;
+
     public List<Order> getOrdersByUserId(Long userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -66,7 +69,7 @@ public class OrderService {
         }
     }
 
-    @Transactional(rollbackFor = Exception.class, isolation = Isolation.SERIALIZABLE)
+    @Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_COMMITTED)
     public String checkout(Long userId) throws StripeException {
 
         User user = getUser(userId);

@@ -14,7 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.optshop.config.AuthService;
+
 import com.optshop.dto.AuthRequest;
 import com.optshop.dto.AuthResponse;
 import com.optshop.entity.Role;

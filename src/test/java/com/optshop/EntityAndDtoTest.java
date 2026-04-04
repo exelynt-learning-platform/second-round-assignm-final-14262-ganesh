@@ -22,7 +22,7 @@ public class EntityAndDtoTest {
 
     @Test
     void testAuthResponse() {
-        AuthResponse a = new AuthResponse("t");
+        AuthResponse a = new AuthResponse("t", "message");
         a.setToken("t2");
         assertEquals("t2", a.getToken());
     }
@@ -114,6 +114,27 @@ public class EntityAndDtoTest {
         o.setPaymentStatus(PaymentStatus.PENDING);
         o.setItems(List.of());
         assertEquals(1L, o.getId());
+        assertEquals(10.0, o.getTotal());
+        assertEquals(OrderStatus.PENDING, o.getStatus());
+        assertEquals(PaymentStatus.PENDING, o.getPaymentStatus());
+        assertNotNull(o.getUser());
+        assertNotNull(o.getItems());
+    }
+
+    @Test
+    void testOrderLombokMethods() {
+        User user = new User();
+        user.setId(1L);
+
+        Order o1 = new Order(1L, user, List.of(), 10.0, OrderStatus.PENDING, PaymentStatus.PENDING);
+        Order o2 = new Order(1L, user, List.of(), 10.0, OrderStatus.PENDING, PaymentStatus.PENDING);
+        Order o3 = new Order(2L, user, List.of(), 20.0, OrderStatus.PAID, PaymentStatus.SUCCESS);
+
+        assertEquals(o1, o2);
+        assertEquals(o1.hashCode(), o2.hashCode());
+        assertNotEquals(o1, o3);
+        assertNotNull(o1.toString());
+        assertTrue(o1.toString().contains("Order"));
     }
 
     @Test
@@ -156,5 +177,23 @@ public class EntityAndDtoTest {
         c.setProduct(new Product());
         c.setQuantity(1);
         assertEquals(1L, c.getId());
+        assertNotNull(c.getCart());
+        assertNotNull(c.getProduct());
+        assertEquals(1, c.getQuantity());
+    }
+
+    @Test
+    void testCartItemLombokMethods() {
+        Cart cart = new Cart();
+        Product product = new Product();
+        CartItem c1 = new CartItem(1L, cart, product, 2);
+        CartItem c2 = new CartItem(1L, cart, product, 2);
+        CartItem c3 = new CartItem(2L, cart, product, 5);
+
+        assertEquals(c1, c2);
+        assertEquals(c1.hashCode(), c2.hashCode());
+        assertNotEquals(c1, c3);
+        assertNotNull(c1.toString());
+        assertTrue(c1.toString().contains("CartItem"));
     }
 }

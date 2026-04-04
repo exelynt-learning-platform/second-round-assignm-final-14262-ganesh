@@ -10,7 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.optshop.config.AuthService;
+import com.optshop.service.AuthService;
 import com.optshop.dto.AuthRequest;
 import com.optshop.dto.AuthResponse;
 
@@ -28,7 +28,7 @@ public class AuthControllerTest {
 
     @Test
     void testLogin() {
-        AuthResponse res = new AuthResponse("dummy");
+        AuthResponse res = new AuthResponse("dummy", "message");
         when(service.login(any())).thenReturn(res);
         assertEquals(res, controller.login(new AuthRequest()));
     }

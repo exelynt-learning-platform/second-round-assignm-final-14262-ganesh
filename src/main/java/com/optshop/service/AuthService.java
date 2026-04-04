@@ -1,4 +1,4 @@
-package com.optshop.config;
+package com.optshop.service;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -10,6 +10,7 @@ import com.optshop.entity.Role;
 import com.optshop.entity.User;
 import com.optshop.repository.UserRepository;
 import com.optshop.security.JwtUtil;
+import com.optshop.config.SecurityConstants;
 
 import lombok.RequiredArgsConstructor;
 
@@ -47,7 +48,7 @@ public class AuthService {
     public AuthResponse login(AuthRequest req) {
         User user = repo.findByEmail(req.getEmail()).orElseThrow(() -> new RuntimeException("User not found"));
         if (encoder.matches(req.getPassword(), user.getPassword())) {
-            return new AuthResponse(jwtUtil.generateToken(user.getEmail()));
+            return new AuthResponse(jwtUtil.generateToken(user.getEmail()), "Login successful");
         }
         throw new RuntimeException("Invalid credentials");
     }

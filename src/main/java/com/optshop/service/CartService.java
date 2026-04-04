@@ -42,17 +42,15 @@ public class CartService {
         Product product = productRepo.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found"));
 
-        validateCartQuantity(product, qty);
-
         CartItem item = itemRepo.findByCartAndProduct(cart, product).orElse(null);
 
+        int targetQuantity = (item != null) ? item.getQuantity() + qty : qty;
+        validateCartQuantity(product, targetQuantity);
+
         if (item != null) {
-            int newQuantity = item.getQuantity() + qty;
-            validateCartQuantity(product, newQuantity);
-            item.setQuantity(newQuantity);
+            item.setQuantity(targetQuantity);
         } else {
-            validateCartQuantity(product, qty);
-            item = new CartItem(null, cart, product, qty);
+            item = new CartItem(null, cart, product, targetQuantity);
         }
 
         itemRepo.save(item);

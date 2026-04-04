@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 
-import com.optshop.config.AuthService;
+import com.optshop.service.AuthService;
 import com.optshop.dto.AuthRequest;
 import com.optshop.dto.AuthResponse;
 

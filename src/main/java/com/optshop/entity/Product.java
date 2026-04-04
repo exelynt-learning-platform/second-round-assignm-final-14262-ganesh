@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Data
@@ -30,8 +31,9 @@ public class Product {
     @NotBlank(message = "Description is mandatory")
     private String description;
     
+    @NotNull(message = "Price is mandatory")
     @Min(1)
-    private double price;
+    private Double price;
     
     @Min(0)
     private int stock;
