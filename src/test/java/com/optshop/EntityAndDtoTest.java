@@ -91,6 +91,20 @@ public class EntityAndDtoTest {
     }
 
     @Test
+    void testProductLombokMethods() {
+        Product p1 = new Product(1L, 1L, "n", "d", 10.0, 10, "i");
+        Product p2 = new Product(1L, 1L, "n", "d", 10.0, 10, "i");
+
+        assertEquals(p1, p2);
+        assertEquals(p1.hashCode(), p2.hashCode());
+        assertNotNull(p1.toString());
+        assertTrue(p1.toString().contains("Product"));
+
+        p1.setVersion(2L);
+        assertEquals(2L, p1.getVersion());
+    }
+
+    @Test
     void testOrder() {
         Order o = new Order();
         o.setId(1L);
@@ -110,6 +124,20 @@ public class EntityAndDtoTest {
         o.setProduct(new Product());
         o.setQuantity(1);
         assertEquals(1L, o.getId());
+    }
+
+    @Test
+    void testOrderItemLombokMethods() {
+        Order order = new Order();
+        Product product = new Product();
+        OrderItem o1 = new OrderItem(1L, order, product, 2);
+        OrderItem o2 = new OrderItem(1L, order, product, 2);
+
+        assertEquals(o1, o2);
+        assertEquals(o1.hashCode(), o2.hashCode());
+        assertNotNull(o1.toString());
+        assertTrue(o1.toString().contains("OrderItem"));
+        assertEquals(2, o1.getQuantity());
     }
 
     @Test

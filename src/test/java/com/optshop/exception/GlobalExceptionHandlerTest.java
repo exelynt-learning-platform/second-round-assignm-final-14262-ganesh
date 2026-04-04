@@ -15,4 +15,20 @@ public class GlobalExceptionHandlerTest {
         assertEquals(400, response.getStatusCode().value());
         assertEquals("Test error", response.getBody());
     }
+
+    @Test
+    void testHandleInsufficientStockException() {
+        InsufficientStockException ex = new InsufficientStockException("Not enough stock");
+        ResponseEntity<String> response = handler.handleStock(ex);
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("Not enough stock", response.getBody());
+    }
+
+    @Test
+    void testHandleProductNotFoundException() {
+        ProductNotFoundException ex = new ProductNotFoundException("Product 1 not found");
+        ResponseEntity<String> response = handler.handleProduct(ex);
+        assertEquals(404, response.getStatusCode().value());
+        assertEquals("Product 1 not found", response.getBody());
+    }
 }
